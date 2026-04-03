@@ -6,6 +6,7 @@ import Profile from "../features/users/pages/Profile";
 import AppLayout from "../components/layouts/AppLayout";
 import CreatePost from "../features/posts/pages/CreatePost";
 import Search from "../features/users/pages/Search";
+import Story from "../features/users/pages/Story";
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: "/search",
         element: <Search />,
+      },
+      {
+        path: "/stories/:userId",
+        element: <Story />,
       },
     ],
   },

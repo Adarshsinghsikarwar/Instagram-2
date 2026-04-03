@@ -8,6 +8,7 @@ import { config } from "./config/config.js";
 import cors from "cors";
 import morgan from "morgan";
 import userRouter from "./routes/user.route.js";
+import storyRouter from "./routes/story.routes.js";
 
 const app = express();
 app.use(morgan("dev"));
@@ -42,6 +43,7 @@ passport.use(
 app.use("/api/auth", authRouter);
 app.use("/api/posts", postRouter);
 app.use("/api/users", userRouter);
+app.use("/api/stories", storyRouter);
 app.get("/", (req, res) => {
   res.json({ message: "Instagram API Server" });
 });
