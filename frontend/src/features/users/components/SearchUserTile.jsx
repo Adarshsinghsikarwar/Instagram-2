@@ -4,6 +4,9 @@ import { useUser } from "../hooks/useUser";
 const SearchUserTile = ({ user }) => {
   const { handleFollowUser } = useUser();
   const requested = useSelector((state) => state.user.requested);
+  const currentUserId = useSelector((state) => state.auth.user?.id);
+  const isCurrentUser =
+    String(user?._id ?? user?.id ?? "") === String(currentUserId ?? "");
 
   const handleClick = async (userId) => {
     await handleFollowUser({ userId });
@@ -39,14 +42,20 @@ const SearchUserTile = ({ user }) => {
         </div>
       </div>
 
-      <button
-        onClick={() => {
-          handleClick(user._id);
-        }}
-        className="bg-[#5e5e5e] hover:bg-[#525252] text-white px-5 py-1.5 cursor-pointer rounded-lg text-[14px] font-medium transition-colors shadow-sm active:scale-95"
-      >
-        {requested.includes(user._id) ? "requested" : "follow"}
-      </button>
+      {!isCurrentUser && (
+        <button
+          onClick={() => {
+            handleClick(user._id);
+          }}
+          className="bg-[#5e5e5e] hover:bg-[#525252] text-white px-5 py-1.5 cursor-pointer rounded-lg text-[14px] font-medium transition-colors shadow-sm active:scale-95"
+        >
+          {requested.includes(user._id) || user.followStatus == "requested"
+            ? "requested"
+            : user.followStatus == "following"
+            ? "following"
+            : "follow"}
+        </button>
+      )}
     </div>
   );
 };

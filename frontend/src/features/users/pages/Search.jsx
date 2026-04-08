@@ -10,9 +10,11 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
 
   const { handleSearchUser } = useUser();
-  const fetchSearchResults = async () => {
-    const users = await handleSearchUser(query);
+  const fetchSearchResults = async (searchText) => {
+    setLoading(true);
+    const users = await handleSearchUser(searchText);
     setResults(users);
+    setLoading(false);
   };
 
   const debouncedSearch = useMemo(
@@ -25,10 +27,16 @@ const Search = () => {
 
   useEffect(() => {
     if (!query) {
+      setResults([]);
+      setLoading(false);
       return;
     }
     debouncedSearch(query);
-  }, [query]);
+
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [query, debouncedSearch]);
 
   return (
     <div

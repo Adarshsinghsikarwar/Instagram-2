@@ -1,5 +1,6 @@
 import userModel from "../models/user.model.js";
 import followModel from "../models/follow.model.js";
+import mongoose from "mongoose";
 
 export const searchUsers = async (req, res) => {
   const { q } = req.query;
@@ -15,15 +16,71 @@ export const searchUsers = async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "follows",
+        as: "followDoc",
+        let: { searchUser: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ["$followee", "$$searchUser"],
+                  },
+                  {
+                    $eq: [
+                      "$follower",
+                      new mongoose.Types.ObjectId(req.user.id),
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        followStatus: {
+          $cond: {
+            if: {
+              $eq: [{ $size: "$followDoc" }, 0],
+            },
+            then: "not-following",
+            else: {
+              $cond: {
+                if: {
+                  $eq: [
+                    {
+                      $arrayElemAt: ["$followDoc.status", 0],
+                    },
+                    "pending",
+                  ],
+                },
+                then: "requested",
+                else: "following",
+              },
+            },
+          },
+        },
+      },
+    },
+    {
       $project: {
         username: 1,
         fullname: 1,
         profilePicture: 1,
+        followStatus: 1,
       },
     },
   ]);
 
-  res.status(200).json({ message: "Users fetched successfully", users });
+  res.status(200).json({
+    message: "Users fetched successfully",
+    users,
+  });
 };
 
 export const followUser = async (req, res) => {
@@ -32,7 +89,7 @@ export const followUser = async (req, res) => {
 
   const isUserExists = await userModel.findById(userId);
   if (!isUserExists) {
-    return res.status(404).json({ message: false, message: "User not found" });
+    return res.status(404).json({ success: false, message: "User not found" });
   }
 
   if (userId === currentUserId) {
@@ -61,3 +118,22 @@ export const followUser = async (req, res) => {
     .status(200)
     .json({ success: true, message: "Follow request sent successfully" });
 };
+
+// const users = await userModel.aggregate([
+//   {
+//     $search: {
+//       index: "user_search_feature",
+//       autocomplete: {
+//         query: q,
+//         path: "username",
+//       },
+//     },
+//   },
+//   {
+//     $project: {
+//       username: 1,
+//       fullname: 1,
+//       profilePicture: 1,
+//     },
+//   },
+// ]);

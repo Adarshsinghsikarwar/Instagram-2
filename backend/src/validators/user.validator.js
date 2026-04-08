@@ -3,7 +3,7 @@ import { validate } from "../middlewares/validate.js";
 
 export const validateFollowUser = [
   param("userId")
-    .isEmpty()
+    .notEmpty()
     .withMessage("User ID is required")
     .isMongoId()
     .withMessage("User ID must be a valid MongoDB ObjectId"),
