@@ -9,3 +9,12 @@ export const validateFollowUser = [
     .withMessage("User ID must be a valid MongoDB ObjectId"),
   validate,
 ];
+
+export const validateFollowRequest = [
+  param("requestId")
+    .notEmpty()
+    .withMessage("Request ID is required")
+    .isMongoId()
+    .withMessage("Request ID must be a valid MongoDB ObjectId"),
+  validate,
+];

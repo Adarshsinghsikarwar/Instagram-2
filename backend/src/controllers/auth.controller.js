@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
 
+
 /**
  * @desc Register a new user
  * @route POST /api/auth/register
@@ -199,6 +200,6 @@ export const googleCallback = async (req, res) => {
   });
 };
 
-export const seachUsers = async (req, res) => {
-  
-};
+
+
+export const seachUsers = async (req, res) => {};

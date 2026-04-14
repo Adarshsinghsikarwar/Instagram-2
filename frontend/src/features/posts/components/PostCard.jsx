@@ -1,134 +1,129 @@
 import { useState, useRef } from "react";
 import VideoPlayer from "./VideoPlayer";
-import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
 
 const PostCard = ({ post }) => {
-  // Simple state to track active carousel slide for indicators
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const scrollRef = useRef(null);
 
   const handleScroll = (e) => {
-    if (!scrollRef.current) return;
-    const scrollPosition = e.target.scrollLeft;
-    const slideWidth = e.target.offsetWidth;
-    // Calculate the closest visible slide based on scroll width vs total width
-    const currentIndex = Math.round(scrollPosition / slideWidth);
-    if (currentIndex !== activeSlide) {
-      setActiveSlide(currentIndex);
-    }
+    const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+    if (idx !== activeSlide) setActiveSlide(idx);
   };
 
   return (
-    <article className="bg-white rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] mb-8 overflow-hidden">
+    <article className="bg-white border border-gray-200 rounded-xl mb-6 overflow-hidden w-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 px-5">
-        <div className="flex items-center space-x-3">
-          <div className="p-[2px] rounded-full bg-zinc-50 border border-zinc-100">
-            <img
-              src={post.author.profilePicture}
-              alt={post.author.username}
-              className="w-10 h-10 rounded-full object-cover"
-            />
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          {/* Avatar with gradient ring */}
+          <div className="p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600">
+            <div className="p-[2px] bg-white rounded-full">
+              <img
+                src={post.author.profilePicture}
+                alt={post.author.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-zinc-900 font-semibold text-[15px] leading-tight tracking-tight">
+          <div>
+            <p className="text-sm font-semibold text-gray-900 leading-none">
               {post.author.username}
-            </span>
+            </p>
           </div>
         </div>
-        <button className="text-zinc-400 hover:text-zinc-600 transition-colors">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="1" />
-            <circle cx="19" cy="12" r="1" />
-            <circle cx="5" cy="12" r="1" />
-          </svg>
+        <button className="text-gray-500 hover:text-gray-900 transition-colors p-1">
+          <MoreHorizontal size={20} />
         </button>
       </div>
 
-      {/* Media Carousel */}
-      <div className="w-full relative">
+      {/* Media */}
+      <div className="w-full relative bg-gray-100">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] aspect-[4/5] bg-zinc-50"
+          className="flex overflow-x-auto snap-x snap-mandatory aspect-square [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
         >
           {post.media.map((item, index) => (
-            <div
-              key={item._id}
-              className="w-full h-full flex-none snap-center relative break-inside-avoid"
-            >
+            <div key={item._id} className="w-full flex-none snap-center">
               {item.media_type === "video" ? (
                 <VideoPlayer url={item.url} />
               ) : (
                 <img
                   src={item.url}
-                  alt={`Post Content ${index + 1}`}
+                  alt={`Post image ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
               )}
             </div>
           ))}
         </div>
+
+        {post.media.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {post.media.map((_, i) => (
+              <span
+                key={i}
+                className={`block rounded-full transition-all duration-300 ${
+                  i === activeSlide
+                    ? "w-2 h-2 bg-white"
+                    : "w-1.5 h-1.5 bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Action Bar & Caption */}
-      <div className="p-5 pt-4">
-        <div className="flex justify-between items-center mb-4 relative">
-          <div className="flex items-center space-x-4">
-            <button className="text-zinc-900 hover:text-rose-600 transition-colors">
-              <Heart strokeWidth={1.5} size={26} />
+      {/* Actions */}
+      <div className="px-4 pt-3 pb-4">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLiked(!liked)}
+              className={`transition-all active:scale-90 ${liked ? "text-red-500" : "text-gray-900 hover:text-gray-500"}`}
+            >
+              <Heart
+                size={24}
+                strokeWidth={2}
+                fill={liked ? "currentColor" : "none"}
+              />
             </button>
-            <button className="text-zinc-900 hover:text-zinc-600 transition-colors">
-              <MessageCircle strokeWidth={1.5} size={26} />
+            <button className="text-gray-900 hover:text-gray-500 transition-colors active:scale-90">
+              <MessageCircle size={24} strokeWidth={2} />
             </button>
-            <button className="text-zinc-900 hover:text-zinc-600 transition-colors">
-              <Send strokeWidth={1.5} size={26} />
+            <button className="text-gray-900 hover:text-gray-500 transition-colors active:scale-90">
+              <Send size={24} strokeWidth={2} />
             </button>
           </div>
-
-          {/* Carousel dots in the center of the action bar */}
-          {post.media.length > 1 && (
-            <div className="absolute left-1/2 -translate-x-1/2 flex space-x-1.5">
-              {post.media.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === activeSlide
-                      ? "w-1.5 bg-blue-500"
-                      : "w-1.5 bg-zinc-300"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-
-          <button className="text-zinc-900 hover:text-zinc-600 transition-colors">
-            <Bookmark strokeWidth={1.5} size={26} />
+          <button
+            onClick={() => setSaved(!saved)}
+            className={`transition-all active:scale-90 ${saved ? "text-gray-900" : "text-gray-900 hover:text-gray-500"}`}
+          >
+            <Bookmark
+              size={24}
+              strokeWidth={2}
+              fill={saved ? "currentColor" : "none"}
+            />
           </button>
         </div>
 
-        <div className="text-[15px] leading-relaxed text-zinc-800">
-          <span className="font-semibold text-zinc-900 mr-2">
-            {post.author.username}
-          </span>
-          <span>{post.caption}</span>
+        {/* Caption */}
+        <div className="text-sm text-gray-900 leading-snug">
+          <span className="font-semibold mr-1.5">{post.author.username}</span>
+          <span className="text-gray-700">{post.caption}</span>
         </div>
 
-        <div className="mt-2 text-xs text-zinc-400 font-medium tracking-wide uppercase">
+        {/* Date */}
+        <p className="text-[11px] text-gray-400 mt-2 uppercase tracking-wide font-medium">
           {new Date(post.createdAt).toLocaleDateString(undefined, {
-            month: "short",
+            month: "long",
             day: "numeric",
           })}
-        </div>
+        </p>
       </div>
     </article>
   );

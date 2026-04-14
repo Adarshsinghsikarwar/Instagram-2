@@ -9,13 +9,14 @@ import cors from "cors";
 import morgan from "morgan";
 import userRouter from "./routes/user.route.js";
 import storyRouter from "./routes/story.routes.js";
+import chatRouter from "./routes/chat.route.js";
 
 const app = express();
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
 );
@@ -44,6 +45,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/posts", postRouter);
 app.use("/api/users", userRouter);
 app.use("/api/stories", storyRouter);
+app.use("/api/chats", chatRouter);
 app.get("/", (req, res) => {
   res.json({ message: "Instagram API Server" });
 });

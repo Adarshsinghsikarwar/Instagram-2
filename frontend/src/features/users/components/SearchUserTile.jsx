@@ -12,48 +12,56 @@ const SearchUserTile = ({ user }) => {
     await handleFollowUser({ userId });
   };
 
+  const isFollowing = user.followStatus === "following";
+  const isRequested =
+    requested.includes(user._id) || user.followStatus === "requested";
+
   return (
-    <div
-      key={user._id}
-      className="flex items-center justify-between p-3 rounded-xl hover:bg-[#f2f4f4] transition-colors cursor-pointer"
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full overflow-hidden bg-[#ebeeef] border-2 border-white shadow-sm shrink-0">
+    <div className="flex items-center justify-between px-1 py-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Avatar */}
+        <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
           <img
             src={
               user.profilePicture ||
               `https://ui-avatars.com/api/?name=${
-                user.username || "User"
-              }&background=ebeeef&color=5e5e5e`
+                user.username || "U"
+              }&background=f3f4f6&color=6b7280&bold=true`
             }
             alt={user.username}
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="flex flex-col">
-          <span className="font-semibold text-[15px] text-[#2d3435] leading-tight group-hover:underline">
+
+        {/* Info */}
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-semibold text-gray-900 truncate leading-tight">
             {user.username}
           </span>
           {user.fullname && (
-            <span className="text-[13px] text-[#5a6061] mt-0.5">
+            <span className="text-sm text-gray-400 truncate mt-0.5">
               {user.fullname}
             </span>
           )}
         </div>
       </div>
 
+      {/* Follow button */}
       {!isCurrentUser && (
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             handleClick(user._id);
           }}
-          className="bg-[#5e5e5e] hover:bg-[#525252] text-white px-5 py-1.5 cursor-pointer rounded-lg text-[14px] font-medium transition-colors shadow-sm active:scale-95"
+          className={`flex-shrink-0 ml-4 px-4 py-[6px] rounded-lg text-sm font-semibold transition-colors active:scale-95 ${
+            isFollowing
+              ? "bg-gray-100 text-gray-900 hover:bg-gray-200"
+              : isRequested
+              ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              : "bg-blue-500 text-white hover:bg-blue-600"
+          }`}
         >
-          {requested.includes(user._id) || user.followStatus == "requested"
-            ? "requested"
-            : user.followStatus == "following"
-            ? "following"
-            : "follow"}
+          {isRequested ? "Requested" : isFollowing ? "Following" : "Follow"}
         </button>
       )}
     </div>

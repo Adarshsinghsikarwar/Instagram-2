@@ -7,6 +7,8 @@ import AppLayout from "../components/layouts/AppLayout";
 import CreatePost from "../features/posts/pages/CreatePost";
 import Search from "../features/users/pages/Search";
 import Story from "../features/users/pages/Story";
+import Notification from "../features/users/pages/Notification";
+import Messages from "../features/chats/pages/Messages";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +42,14 @@ export const router = createBrowserRouter([
       {
         path: "/stories/:userId",
         element: <Story />,
+      },
+      {
+        path: "notifications",
+        element: <Notification />,
+      },
+      {
+        path: "/messages",
+        element: <Messages />,
       },
     ],
   },

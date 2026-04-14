@@ -29,7 +29,7 @@ const Register = () => {
 
     if (!passwordRule.test(formData.password)) {
       setErrorMessage(
-        "Password must be at least 6 chars and include uppercase, lowercase, number, and special character (@$#!%*?&)"
+        "Password must be at least 6 chars and include uppercase, lowercase, number, and special character (@$#!%*?&)",
       );
       return;
     }

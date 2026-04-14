@@ -1,152 +1,197 @@
-import { useState, useRef, use } from "react";
-import { ImagePlus, X, Upload } from "lucide-react";
+import { useState, useRef } from "react";
+import { ImagePlus, X, Smile, MapPin, ChevronDown } from "lucide-react";
 import { usePost } from "../hooks/usePost";
 import { useNavigate } from "react-router";
+import { useSelector } from "react-redux";
 
 const CreatePost = () => {
   const [dragActive, setDragActive] = useState(false);
   const [caption, setCaption] = useState("");
+  const [previews, setPreviews] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const filesRef = useRef(null);
   const fileInputRef = useRef(null);
   const { handleCreatePost } = usePost();
   const navigate = useNavigate();
+  const user = useSelector((state) => state.auth?.user);
 
-  const handleDrag = function (e) {
+  const avatarUrl = user?.profilePicture || user?.prfilePicture;
+
+  const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
-  const handleDrop = function (e) {
+  const processFiles = (files) => {
+    filesRef.current = files;
+    const urls = Array.from(files).map((f) => URL.createObjectURL(f));
+    setPreviews(urls);
+  };
+
+  const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // handle file
-      const files = e.dataTransfer.files;
-      fileInputRef.current = files;
-    }
+    if (e.dataTransfer.files?.length) processFiles(e.dataTransfer.files);
   };
 
   const handleFileChange = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+    if (e.target.files?.length) processFiles(e.target.files);
+  };
 
-    if (e.target.files && e.target.files[0]) {
-      const files = e.target.files;
-      fileInputRef.current = files;
-    }
+  const clearFiles = () => {
+    previews.forEach(URL.revokeObjectURL);
+    setPreviews([]);
+    filesRef.current = null;
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleShare = async () => {
-    const data = await handleCreatePost({
-      files: fileInputRef.current,
-      caption,
-    });
-    navigate("/");
+    if (!filesRef.current) return;
+    setIsSubmitting(true);
+    try {
+      await handleCreatePost({ files: filesRef.current, caption });
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  const hasFiles = previews.length > 0;
+
   return (
-    <div className="w-full max-w-4xl h-full  mx-auto pb-12 min-h-[600px] flex items-center justify-center pt-8">
-      <div className="bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full overflow-hidden border border-zinc-100 flex flex-col md:flex-row min-h-[550px]">
-        {/* Visual Area for Media Upload */}
-        <div
-          className={`flex-1 flex flex-col items-center justify-center p-12 transition-colors duration-300 relative border-b md:border-b-0 md:border-r border-zinc-100 ${
-            dragActive ? "bg-blue-50/50" : "bg-zinc-50/50 hover:bg-zinc-50"
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <div className="absolute inset-4 border-2 border-dashed border-zinc-200 rounded-2xl pointer-events-none transition-colors duration-300 peer-hover:border-blue-400" />
+    <div className="max-w-[470px] mx-auto px-4 py-6 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+          Create new post
+        </h1>
+        {hasFiles && (
+          <button
+            onClick={handleShare}
+            disabled={isSubmitting}
+            className="text-sm font-bold text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-50"
+          >
+            {isSubmitting ? "Sharing..." : "Share"}
+          </button>
+        )}
+      </div>
 
-          <div className="relative text-center w-full max-w-sm">
-            <div className="mx-auto w-24 h-24 mb-6 rounded-full bg-white shadow-sm flex items-center justify-center animate-bounce-slow">
-              <ImagePlus strokeWidth={1} size={42} className="text-zinc-400" />
+      {/* Card */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {/* Media Upload / Preview Area */}
+        {!hasFiles ? (
+          <div
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`flex flex-col items-center justify-center p-12 transition-colors min-h-[350px] ${
+              dragActive ? "bg-blue-50" : "bg-gray-50"
+            }`}
+          >
+            <div className="w-20 h-20 rounded-full border-2 border-gray-200 flex items-center justify-center mb-5">
+              <ImagePlus size={32} className="text-gray-300" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl font-semibold text-zinc-900 mb-3 tracking-tight">
+            <p className="text-lg font-medium text-gray-900 mb-1">
               Drag photos and videos here
-            </h3>
-            <p className="text-zinc-500 mb-8 leading-relaxed">
-              Support for JPG, PNG, and MP4 files. Maximum size 50MB.
             </p>
-
-            <label className="relative overflow-hidden inline-flex items-center justify-center px-8 py-3.5 font-medium text-white bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 active:scale-95 transition-all shadow-md hover:shadow-lg shadow-blue-500/20">
-              <span>Select from computer</span>
+            <p className="text-sm text-gray-400 mb-6">
+              JPG, PNG, MP4 — up to 50MB
+            </p>
+            <label className="px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-lg cursor-pointer hover:bg-blue-600 transition-colors active:scale-95">
+              Select from computer
               <input
+                ref={fileInputRef}
                 onChange={handleFileChange}
                 type="file"
-                className="absolute opacity-0 w-full h-full cursor-pointer"
+                className="hidden"
                 accept="image/*,video/*"
                 multiple
               />
             </label>
           </div>
-        </div>
-
-        {/* Content Area for Details */}
-        <div className="w-full md:w-[350px] lg:w-[400px] flex flex-col bg-white">
-          <div className="p-4 border-b border-zinc-100 flex items-center justify-center relative bg-white/50 backdrop-blur-md sticky top-0 z-10">
-            <h2 className="text-zinc-900 font-semibold tracking-wide">
-              Create new post
-            </h2>
+        ) : (
+          <div className="relative">
+            {/* Preview grid */}
+            <div className={`grid gap-0.5 ${previews.length === 1 ? "" : "grid-cols-2"}`}>
+              {previews.map((url, i) => (
+                <div key={i} className="aspect-square bg-gray-100 overflow-hidden">
+                  <img src={url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            {/* Clear button */}
             <button
-              onClick={handleShare}
-              className="absolute right-4 text-blue-500 font-medium text-sm hover:text-blue-700 transition-colors"
+              onClick={clearFiles}
+              className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
             >
-              Share
+              <X size={16} className="text-white" strokeWidth={2.5} />
             </button>
           </div>
+        )}
 
-          <div className="p-6 flex-1 flex flex-col overflow-y-auto">
-            <div className="flex items-center mb-6">
-              <div className="w-9 h-9 rounded-full bg-zinc-200 overflow-hidden border border-zinc-100">
-                {/* Current User Placeholder */}
-                <div className="w-full h-full bg-gradient-to-tr from-rose-100 to-teal-100"></div>
-              </div>
-              <span className="font-semibold text-zinc-900 text-[15px] ml-3">
-                current_user
-              </span>
+        {/* Caption Section */}
+        <div className="border-t border-gray-200">
+          {/* User info */}
+          <div className="flex items-center gap-3 px-4 pt-4">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={user?.username} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-400 bg-gray-100">
+                  {user?.fullname?.[0] || "U"}
+                </div>
+              )}
             </div>
+            <span className="text-sm font-semibold text-gray-900">
+              {user?.username || "you"}
+            </span>
+          </div>
 
+          {/* Caption textarea */}
+          <div className="px-4 py-3">
             <textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Write a caption..."
-              className="w-full flex-1 resize-none bg-transparent outline-none text-zinc-800 placeholder-zinc-400 text-base leading-relaxed"
-              rows={8}
+              maxLength={2200}
+              className="w-full resize-none bg-transparent outline-none text-sm text-gray-900 placeholder-gray-400 leading-relaxed"
+              rows={5}
             />
-
-            <div className="mt-auto pt-6 border-t border-zinc-100">
-              <div className="flex justify-between items-center text-zinc-400">
-                <button className="hover:text-zinc-600 transition-colors">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                    <line x1="9" y1="9" x2="9.01" y2="9" />
-                    <line x1="15" y1="9" x2="15.01" y2="9" />
-                  </svg>
-                </button>
-                <span className="text-xs font-medium">
-                  {caption.length}/2200
-                </span>
-              </div>
-            </div>
           </div>
+
+          {/* Footer toolbar */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+            <button className="text-gray-400 hover:text-gray-600 transition-colors">
+              <Smile size={20} />
+            </button>
+            <span className="text-xs text-gray-300 font-medium tabular-nums">
+              {caption.length}/2,200
+            </span>
+          </div>
+
+          {/* Optional Add Location */}
+          <button className="flex items-center justify-between w-full px-4 py-3 border-t border-gray-100 hover:bg-gray-50 transition-colors">
+            <span className="text-sm text-gray-900">Add location</span>
+            <MapPin size={16} className="text-gray-400" />
+          </button>
+
+          {/* Accessibility */}
+          <button className="flex items-center justify-between w-full px-4 py-3 border-t border-gray-100 hover:bg-gray-50 transition-colors">
+            <span className="text-sm text-gray-900">Accessibility</span>
+            <ChevronDown size={16} className="text-gray-400" />
+          </button>
+
+          {/* Advanced Settings */}
+          <button className="flex items-center justify-between w-full px-4 py-3 border-t border-gray-100 hover:bg-gray-50 transition-colors rounded-b-xl">
+            <span className="text-sm text-gray-900">Advanced settings</span>
+            <ChevronDown size={16} className="text-gray-400" />
+          </button>
         </div>
       </div>
     </div>

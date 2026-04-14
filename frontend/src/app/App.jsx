@@ -4,6 +4,7 @@ import { router } from "./app.route.jsx";
 import { useAuth } from "../features/auth/hooks/useAuth.jsx";
 import { useEffect } from "react";
 
+
 const App = () => {
   const { handleGetMe } = useAuth();
 

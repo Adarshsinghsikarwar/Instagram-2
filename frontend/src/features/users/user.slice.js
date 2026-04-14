@@ -4,6 +4,8 @@ const initialState = {
   followers: [],
   following: [],
   requested: [],
+  followRequests: [],
+  profile: null,
 };
 
 const userSlice = createSlice({
@@ -22,9 +24,35 @@ const userSlice = createSlice({
     appendRequest: (state, action) => {
       state.requested = [...state.requested, action.payload];
     },
+    setFollowRequests: (state, action) => {
+      state.followRequests = action.payload;
+    },
+    acceptFollowRequestState: (state, action) => {
+      const requestId = action.payload;
+      state.followRequests = state.followRequests.map((request) => {
+        if (request._id === requestId) {
+          return {
+            ...request,
+            status: "accepted",
+          };
+        }
+
+        return request;
+      });
+    },
+    setProfile: (state, action) => {
+      state.profile = action.payload;
+    },
   },
 });
 
-export const { setFollowers, setFollowing, setRequested, appendRequest } =
-  userSlice.actions;
+export const {
+  setFollowers,
+  setFollowing,
+  setRequested,
+  appendRequest,
+  setFollowRequests,
+  acceptFollowRequestState,
+  setProfile,
+} = userSlice.actions;
 export default userSlice.reducer;

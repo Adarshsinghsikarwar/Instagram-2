@@ -15,42 +15,44 @@ const Home = () => {
 
   if (!user) {
     return (
-      <div className="max-w-2xl mx-auto p-4 text-center">
-        <h1 className="text-2xl font-semibold text-zinc-900">Welcome</h1>
-        <p className="mt-2 text-zinc-600">
-          Please log in to see your personalized feed.
-        </p>
-        <a
-          href="/login"
-          className="inline-block mt-4 px-4 py-2 rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 transition-colors"
-        >
-          Go to Login
-        </a>
-      </div>
-    );
-  }
-
-  if (!posts?.length) {
-    return (
-      <div className="max-w-2xl mx-auto p-4 text-center">
-        <h1 className="text-2xl font-semibold text-zinc-900">Home Feed</h1>
-        <p className="mt-2 text-zinc-600">
-          No posts available yet. Follow people or create your first post.
-        </p>
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-3">
+            Welcome back
+          </h1>
+          <p className="text-gray-500 mb-6 text-sm">
+            Log in to see photos and videos from people you follow.
+          </p>
+          <a
+            href="/login"
+            className="inline-block px-6 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+          >
+            Log In
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full flex justify-center pb-20 md:pb-8 pt-4 md:pt-8">
-      <div className="max-w-2xl mx-auto p-4 flex flex-col items-center w-full">
-        <StoryRow />
-        {posts?.map((post) => (
-          <PostCard key={post._id} post={post} />
-        ))}
-      </div>
+    <div className="flex flex-col items-center px-4 py-6 w-full max-w-[470px] mx-auto">
+      <StoryRow />
+      {posts?.length > 0 ? (
+        posts.map((post) => <PostCard key={post._id} post={post} />)
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center w-full">
+          <p className="text-2xl mb-2">📷</p>
+          <h2 className="text-base font-semibold text-gray-900 mb-1">
+            Your feed is empty
+          </h2>
+          <p className="text-sm text-gray-500">
+            Follow people to see their photos and videos here.
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Home;
+
