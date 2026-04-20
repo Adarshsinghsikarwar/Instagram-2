@@ -23,10 +23,9 @@ const userSchema = new mongoose.Schema({
   },
   googleId: {
     type: String,
-    unique: true,
-    //sparse: true, // Allows multiple documents to have null googleId
+    // Keep this optional and let the schema-level sparse unique index handle uniqueness.
   },
-  prfilePicture: {
+  profilePicture: {
     type: String,
     default:
       "https://ik.imagekit.io/zdc2bt86h/profileImage?updatedAt=1774290662832",

@@ -198,7 +198,7 @@ export const getMyProfileData = async (req, res) => {
     .find({ author: loggedInUserId })
     .sort({ createdAt: -1 });
 
-  const profilePicture = user.profilePicture || user.profilePicture;
+  const profilePicture = user.profilePicture;
 
   return res.status(200).json({
     success: true,

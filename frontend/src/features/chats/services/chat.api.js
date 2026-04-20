@@ -5,3 +5,9 @@ export const getChatUsers = async () => {
 
   return response.data;
 };
+
+export const getMessagesByUser = async (userId) => {
+  const response = await api.get(`/chats/messages/${userId}`);
+
+  return response.data;
+};

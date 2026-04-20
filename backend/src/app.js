@@ -13,15 +13,16 @@ import chatRouter from "./routes/chat.route.js";
 
 const app = express();
 app.use(morgan("dev"));
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: ["http://localhost:5173", "http://localhost:5174"],
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+//     credentials: true,
+//   })
+// );
 
 app.use(express.json());
+app.use(express.static("public")); // Serve static files from the "public" directory
 // app.use(); // Handle multipart/form-data for file uploads
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -46,6 +47,10 @@ app.use("/api/posts", postRouter);
 app.use("/api/users", userRouter);
 app.use("/api/stories", storyRouter);
 app.use("/api/chats", chatRouter);
+
+app.get("*name", (req, res) => {
+  res.sendFile("index.html", { root: "public" });
+});
 app.get("/", (req, res) => {
   res.json({ message: "Instagram API Server" });
 });

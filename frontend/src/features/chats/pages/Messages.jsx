@@ -1,16 +1,86 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "../hooks/useChat";
 import { useSelector } from "react-redux";
 import ChatUserTile from "../components/ChatUserTile";
 import { io } from "socket.io-client";
 
 const Messages = () => {
-  const { handleGetChatUsers } = useChat();
+  const { handleGetChatUsers, handleAppendMessage, handleGetMessages } =
+    useChat();
+  const loggedInUser = useSelector((store) => store.auth.user);
+  const loggedInUserId = loggedInUser?.id;
   const chats = useSelector((store) => store.chat.chats);
+  const currentChatId = useSelector((store) => store.chat.currentChatId);
+  const [message, setMessage] = useState("");
+  const socketRef = useRef(null);
+  const currentChat = currentChatId ? chats[currentChatId] : null;
+
+  function handleSendMessage() {
+    const trimmedMessage = message.trim();
+    if (
+      !trimmedMessage ||
+      !currentChatId ||
+      !socketRef.current ||
+      !loggedInUser
+    ) {
+      return;
+    }
+
+    socketRef.current.emit("send_message", {
+      message: trimmedMessage,
+      receiver: currentChatId,
+    });
+
+    handleAppendMessage({
+      message: trimmedMessage,
+      receiverId: currentChatId,
+      senderId: loggedInUser.id,
+      currentChatId,
+    });
+
+    setMessage("");
+  }
 
   useEffect(() => {
+    const socket = io("/socket.io", {
+      withCredentials: true,
+    });
+    socketRef.current = socket;
+
+    socket.once("connect", () => {
+      console.log("Connected to socket");
+    });
+
+    socket.on("connect_error", (data) => {
+      console.log(data);
+    });
+
+    socket.on("receive_message", (data) => {
+      if (!loggedInUserId) return;
+
+      handleAppendMessage({
+        message: data.message,
+        receiverId: loggedInUserId,
+        senderId: data.sender,
+        currentChatId: data.sender,
+      });
+    });
+
     handleGetChatUsers();
-  }, [handleGetChatUsers]);
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [handleAppendMessage, handleGetChatUsers, loggedInUserId]);
+
+  useEffect(() => {
+    if (!currentChatId) return;
+
+    handleGetMessages(currentChatId).catch((error) => {
+      console.error("Failed to load chat history", error);
+    });
+  }, [currentChatId, handleGetMessages]);
 
   const chatUsers = Object.values(chats);
 
@@ -22,36 +92,80 @@ const Messages = () => {
           <div className="flex-1 bg-[#ffffff] shadow-[0_24px_48px_rgba(0,0,0,0.02)] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="px-8 py-6 border-b border-[#f2f4f4]/60">
-              <h2 className="text-2xl tracking-tight font-medium text-[#2d3435]">
-                Chat
-              </h2>
+              {!currentChatId && (
+                <h2 className="text-2xl tracking-tight font-medium text-[#2d3435]">
+                  Chat
+                </h2>
+              )}
+              {currentChatId && currentChat && (
+                <ChatUserTile actAs={"header"} user={currentChat} />
+              )}
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 p-8 overflow-y-auto flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-[#5a6061] text-sm tracking-wide">
-                  Select a user from the right to start a conversation
-                </p>
-              </div>
+            <div className="flex-1 p-8 overflow-y-auto flex flex-col">
+              {!currentChatId && (
+                <div className="text-center">
+                  <p className="text-[#5a6061] text-sm tracking-wide">
+                    Select a user from the right to start a conversation
+                  </p>
+                </div>
+              )}
+              {currentChatId &&
+                currentChat?.messages?.map((message, index) => {
+                  return (
+                    <div
+                      key={`${message.sender}-${message.receiver}-${index}`}
+                      className={
+                        "flex items-center h-fit gap-2" +
+                        " " +
+                        (message.sender == loggedInUser.id ? "ml-auto" : "")
+                      }
+                    >
+                      <div
+                        className={
+                          "p-2 px-6 rounded-2xl bg-neutral-200" +
+                          " " +
+                          (message.sender == loggedInUser.id
+                            ? "rounded-br-none"
+                            : "rounded-bl-none")
+                        }
+                      >
+                        <p>{message.message}</p>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             {/* Input Area placeholder */}
-            <div className="p-6 bg-[#f2f4f4]/40">
-              <div className="bg-[#ffffff] rounded-full px-6 py-4 border border-[#adb3b4]/20 flex items-center transition-all focus-within:ring-1 focus-within:ring-[#5e5e5e]/50">
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  className="w-full text-sm outline-none bg-transparent placeholder:text-[#adb3b4] text-[#2d3435]"
-                  disabled
-                />
+            {currentChatId && (
+              <div className="p-6 bg-[#f2f4f4]/40 flex gap-2">
+                <div className="bg-[#ffffff] rounded-full px-6 py-4 border border-[#adb3b4]/20 flex grow items-center transition-all focus-within:ring-1 focus-within:ring-[#5e5e5e]/50">
+                  <input
+                    type="text"
+                    placeholder="Type a message..."
+                    className="w-full text-sm outline-none bg-transparent placeholder:text-[#adb3b4] text-[#2d3435]"
+                    value={message}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={handleSendMessage}
+                  className="mt-2 px-4 py-2 bg-[#0095f6] text-white rounded-full hover:bg-[#0077cc] transition-colors"
+                >
+                  Send
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
-        <div className="w-full md:w-[320px] lg:w-[380px] bg-[#f2f4f4] shrink-0 h-[35vh] md:h-full overflow-y-auto p-6 md:p-8 border-l border-[#dde4e5]/30">
+        <div className="w-full md:w-[320px] lg:w-95 bg-[#f2f4f4] shrink-0 h-[35vh] md:h-full overflow-y-auto p-6 md:p-8 border-l border-[#dde4e5]/30">
           <div className="mb-8 flex items-center justify-between">
-            <h3 className="text-xs font-bold tracking-[0.1em] text-[#5a6061] uppercase">
+            <h3 className="text-xs font-bold tracking-widest text-[#5a6061] uppercase">
               Conversations
             </h3>
           </div>

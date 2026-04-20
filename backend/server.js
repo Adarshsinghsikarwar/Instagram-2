@@ -3,18 +3,11 @@ import { connectDB } from "./src/config/database.js";
 import dns from "dns";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import initSocket from "./src/sockets/app.socket.js";
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const httpServer = createServer(app);
-const io = new Server(httpServer, {});
-
-io.on("connection", (socket) => {
-  console.log("A user connected: " + socket.id);
-  socket.on("disconnect", () => {
-    console.log("A user disconnected: " + socket.id);
-  });
-});
-
+initSocket(httpServer);
 connectDB();
 
 httpServer.listen(3000, () => {
