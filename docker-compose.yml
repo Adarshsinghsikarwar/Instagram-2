@@ -1,4 +1,11 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "8081:3000"
+
   backend:
     build:
       context: ./backend
